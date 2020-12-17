@@ -18,12 +18,12 @@
   "author": "Philip Hutchison <philip@pipwerks.com> (http://pipwerks.com)",
   "main": "./pdfobject.js",
   "scripts": {
-    "minify": "terser ./pdfobject.js --comments --mangle --source-map --output ./pdfobject.min.js",
+    "minify": "terser ./pdfobject.js --comments --mangle --source-map url=pdfobject.min.js.map --output ./pdfobject.min.js",
     "standardize": "standard --fix ./pdfobject.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
     "standard": "^16.0.3",
-    "terser": "^5.4.0"
+    "terser": "^5.5.1"
   }
 }
