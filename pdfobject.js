@@ -1,10 +1,10 @@
 /* global ActiveXObject, define, jQuery */
 
 /**
- *  PDFObject v2.2.4
+ *  PDFObject v2.2.5
  *  https://github.com/pipwerks/PDFObject
  *  @license
- *  Copyright (c) 2008-2020 Philip Hutchison
+ *  Copyright (c) 2008-2021 Philip Hutchison
  *  MIT-style license: http://pipwerks.mit-license.org/
  *  UMD module pattern from https://github.com/umdjs/umd/blob/master/templates/returnExports.js
  */
@@ -38,7 +38,7 @@
     return false
   }
 
-  const pdfObjectVersion = '2.2.4'
+  const pdfObjectVersion = '2.2.5'
   const nav = window.navigator
   const ua = window.navigator.userAgent
 
@@ -83,7 +83,7 @@
 
   // Firefox started shipping PDF.js in Firefox 19. If this is Firefox 19 or greater, assume PDF.js is available
   const isFirefoxWithPDFJS =
-    !isMobileDevice && /irefox/.test(ua)
+    !isMobileDevice && /irefox/.test(ua) && ua.split('rv:').length > 1
       ? parseInt(ua.split('rv:')[1].split('.')[0], 10) > 18
       : false
 
@@ -111,8 +111,10 @@
   const supportsPDFs =
     // As of Sept 2020 no mobile browsers properly support PDF embeds
     !isMobileDevice &&
-    // Modern versions of Firefox come bundled with PDFJS
-    (isFirefoxWithPDFJS ||
+    // We're moving into the age of MIME-less browsers. They mostly all support PDF rendering without plugins.
+    (isModernBrowser ||
+      // Modern versions of Firefox come bundled with PDFJS
+      isFirefoxWithPDFJS ||
       // Browsers that still support the original MIME type check
       supportsPdfMimeType ||
       // Pity the poor souls still using IE
@@ -144,6 +146,13 @@
     }
 
     return string
+  }
+
+  const embedError = function (msg, suppressConsole) {
+    if (!suppressConsole) {
+      console.log('[PDFObject] ' + msg)
+    }
+    return false
   }
 
   const emptyNodeContents = function (node) {
@@ -200,6 +209,7 @@
     iframe.className = 'pdfobject'
     iframe.type = 'application/pdf'
     iframe.frameborder = '0'
+    iframe.allow = 'fullscreen'
 
     if (id) {
       iframe.id = id
@@ -241,6 +251,10 @@
 
     if (id) {
       embed.id = id
+    }
+
+    if (embedType === 'iframe') {
+      embed.allow = 'fullscreen'
     }
 
     if (!omitInlineStyles) {
@@ -295,13 +309,6 @@
     const fallbackHTMLDefault =
       "<p>This browser does not support inline PDFs. Please download the PDF to view it: <a href='[url]'>Download PDF</a></p>"
 
-    const embedError = function (msg, suppressConsole) {
-      if (!suppressConsole) {
-        console.log('[PDFObject] ' + msg)
-      }
-      return false
-    }
-
     // Ensure URL is available. If not, exit now.
     if (typeof url !== 'string') {
       return embedError('URL is not valid', suppressConsole)
@@ -338,10 +345,7 @@
 
     // Embed PDF if traditional support is provided, or if this developer is willing to roll with assumption
     // that modern desktop (not mobile) browsers natively support PDFs
-    if (
-      supportsPDFs ||
-      (assumptionMode && isModernBrowser && !isMobileDevice)
-    ) {
+    if (supportsPDFs || (assumptionMode && !isMobileDevice)) {
       // Should we use <embed> or <iframe>? In most cases <embed>.
       // Allow developer to force <iframe>, if desired
       // There is an edge case where Safari does not respect 302 redirect requests for PDF files when using <embed> element.
@@ -397,7 +401,7 @@
     embed: function (a, b, c) {
       return embed(a, b, c)
     },
-    pdfobjectversion: (function () {
+    pdfObjectVersion: (function () {
       return pdfObjectVersion
     })(),
     supportsPDFs: (function () {
